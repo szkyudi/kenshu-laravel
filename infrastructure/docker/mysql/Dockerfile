@@ -1,0 +1,9 @@
+FROM mysql:8.0
+
+ENV TZ=UTC \
+  MYSQL_DATABASE=laravel_local \
+  MYSQL_USER=phper \
+  MYSQL_PASSWORD=1eL58Fd51KzbHCsd8JF8mpHw3zI1OjczgwbRAzyvYZyPr7EjgJXBGxfvnxCHkiJx \
+  MYSQL_ROOT_PASSWORD=S8QfU5yC1LTHf8VxHOEyC8b3lmIw4SARSGhY7CjfN9zKtLf1jEWCKgph0lF9fFPw
+
+COPY ./my.cnf /etc/my.cnf
