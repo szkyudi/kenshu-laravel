@@ -21,7 +21,7 @@ class CreatePostsTable extends Migration
             $table->string('title', 100);
             $table->text('body');
             $table->timestamp('published_at')->useCurrent();
-            $table->boolean('is_open')->default(false);
+            $table->boolean('is_open')->default(true);
             $table->timestamps();
         });
     }

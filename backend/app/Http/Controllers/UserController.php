@@ -9,21 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function index()
-    {
-        //
-    }
-
-    public function create()
-    {
-        //
-    }
-
-    public function store(Request $request)
-    {
-        //
-    }
-
     public function show($screen_name)
     {
         $auth_user = Auth::user();
@@ -39,20 +24,5 @@ class UserController extends Controller
         $posts = $posts->orderBy('published_at', 'desc')->get();
 
         return view('user', ['user' => $user, 'posts' => $posts]);
-    }
-
-    public function edit(User $user)
-    {
-        //
-    }
-
-    public function update(Request $request, User $user)
-    {
-        //
-    }
-
-    public function destroy(User $user)
-    {
-        //
     }
 }
