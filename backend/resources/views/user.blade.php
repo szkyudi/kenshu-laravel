@@ -9,5 +9,5 @@
     @auth
         <a href="{{ route('post.create', $user->screen_name) }}">新規作成</a>
     @endauth
-    @include('collections.posts.list', ['posts' => $user->posts])
+    @include('collections.posts.list', ['posts' => $posts])
 @endsection

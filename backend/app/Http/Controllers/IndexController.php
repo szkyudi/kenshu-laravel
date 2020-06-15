@@ -11,14 +11,14 @@ use Carbon\Carbon;
 
 class IndexController extends Controller
 {
-    public function show(Collection $posts)
+    public function show()
     {
-        // $posts = Post::where([
-        //     ['is_open', true],
-        //     ['published_at', '<=', Carbon::now()],
-        // ])
-        // ->orderBy('published_at', 'desc')
-        // ->get();
+        $posts = Post::where([
+            ['is_open', true],
+            ['published_at', '<=', Carbon::now()],
+        ])
+        ->orderBy('published_at', 'desc')
+        ->get();
 
         return view('index', ['posts' => $posts]);
     }
