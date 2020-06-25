@@ -1,7 +1,13 @@
 <li>
-    {{-- TODO: 本番ではコメントを外す --}}
-    {{-- <img src="{{ $post->thumbnail->thumbnailable->url }}" width="120"> --}}
+    @isset($post->thumbnail)
+        <img src="{{ $post->thumbnail->getUrl() }}" width="120">
+    @endisset
     <a href="{{ route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]) }}">{{ $post->title }}</a>
-    <a href="{{ route('user', ['screen_name' => $post->user->screen_name]) }}">{{ $post->user->screen_name }}</a>
+    @isset($post->tags)
+        @foreach ($post->tags as $tag)
+            <a href="{{ route('tag', ['name' => $tag->name]) }}">#{{ $tag->name }}</a>
+        @endforeach
+    @endisset
+    - by <a href="{{ route('user', ['screen_name' => $post->user->screen_name]) }}">{{ "@".$post->user->screen_name }}</a>
     <span>{{ $post->published_at }}</span>
 </li>

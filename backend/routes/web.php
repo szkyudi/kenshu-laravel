@@ -40,5 +40,6 @@ Route::get('@{screen_name}/create', 'PostController@create')->name('post.create'
 Route::post('@{screen_name}/create', 'PostController@store')->name('post.store');
 Route::get('@{screen_name}/{slug}', 'PostController@show')->name('post');
 Route::get('@{screen_name}/{slug}/edit', 'PostController@edit')->name('post.edit');
-Route::Post('@{screen_name}/{slug}/edit', 'PostController@update')->name('post.update');
+Route::post('@{screen_name}/{slug}/edit', 'PostController@update')->name('post.update');
+Route::post('@{screen_name}/{slug}/destroy', 'PostController@destroy')->name('post.destroy');
 

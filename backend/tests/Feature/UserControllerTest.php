@@ -22,10 +22,11 @@ class UserControllerTest extends TestCase
 
         $post_others = factory(Post::class)->create();
 
-        $response = $this->get("/@$user->screen_name");
+        $response = $this->get(route('user', ['screen_name' => $user->screen_name]));
 
         $response
             ->assertStatus(200)
+            ->assertViewIs('user')
             ->assertSee($post_own->title)
             ->assertDontSee($post_private->title)
             ->assertDontSee($post_others->title);
@@ -36,10 +37,11 @@ class UserControllerTest extends TestCase
         $post = factory(Post::class)->states('close', 'future')->create();
 
         Auth::login($post->user);
-        $response = $this->get("/@" . $post->user->screen_name);
+        $response = $this->get(route('user', ['screen_name' => $post->user->screen_name]));
 
         $response
             ->assertStatus(200)
+            ->assertViewIs('user')
             ->assertSee($post->title);
     }
 
@@ -47,10 +49,11 @@ class UserControllerTest extends TestCase
     {
         $post = factory(Post::class)->states('close', 'future')->create();
 
-        $response = $this->get("/@" . $post->user->screen_name);
+        $response = $this->get(route('user', ['screen_name' => $post->user->screen_name]));
 
         $response
             ->assertStatus(200)
+            ->assertViewIs('user')
             ->assertDontSee($post->title);
     }
 }

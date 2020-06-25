@@ -3,6 +3,8 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+
 
 class Image extends Model
 {
@@ -10,8 +12,12 @@ class Image extends Model
         'url',
     ];
 
-    public function thumbnail()
+    public function getUrl()
     {
-        return $this->morphOne('App\Thumbnail', 'thumbnailable');
+        if (strpos($this->url, 'placeholder.com')) {
+            return $this->url;
+        } else {
+            return Storage::url($this->url);
+        }
     }
 }

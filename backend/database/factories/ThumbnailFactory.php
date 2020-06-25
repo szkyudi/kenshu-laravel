@@ -8,7 +8,6 @@ use Faker\Generator as Faker;
 // SeederからPostを経由して作成する必要がある
 $factory->define(Thumbnail::class, function (Faker $faker) {
     return [
-        'thumbnailable_id' => factory(App\Image::class),
-        'thumbnailable_type' => App\Image::class
+        'url' => "https://via.placeholder.com/120x63?text=".$faker->unique()->slug(1),
     ];
 });

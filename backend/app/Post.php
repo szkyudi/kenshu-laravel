@@ -12,23 +12,22 @@ class Post extends Model
 
     public function user()
     {
-        return $this->belongsTo('App\User', 'user_id', 'id');
+        return $this->belongsTo('App\User');
     }
 
     public function tags()
     {
-        return $this->belongsToMany('App\Tag', 'post_tag', 'post_id', 'tag_id');
+        return $this->belongsToMany('App\Tag');
     }
 
     public function images()
     {
-        return $this->belongsToMany('App\Image', 'post_image', 'post_id', 'image_id');
+        return $this->hasMany('App\Image');
     }
 
     public function thumbnail()
     {
-        // return $this->hasOne('App\Thumbnail', 'post_id')->get()->first()->thumbnailable();
-        return $this->hasOne('App\Thumbnail', 'post_id');
+        return $this->hasOne('App\Thumbnail');
     }
 
     public function __construct(array $attributes = [])
