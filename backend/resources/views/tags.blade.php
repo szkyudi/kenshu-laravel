@@ -9,7 +9,7 @@
     @if ($tags)
     <ul>
         @foreach ($tags as $tag)
-        <li><a href="{{ route('tag', ['name' => $tag->name]) }}">{{ $tag->name }}</a>({{ $tag->posts->count() }})</li>
+        <li><a href="{{ route('tag', ['tag' => $tag]) }}">{{ $tag->name }}</a>({{ $tag->posts->count() }})</li>
         @endforeach
     </ul>
     @else

@@ -17,7 +17,7 @@ class PostControllerTest extends TestCase
     public function testSeeShowPage()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
                  ->assertSee($post->title)
                  ->assertSee($post->body)
@@ -36,7 +36,7 @@ class PostControllerTest extends TestCase
     {
         $post = $this->createValidPost();
         $response = $this->actingAs($post->user)
-                         ->get(route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+                         ->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
                  ->assertSee("編集");
     }
@@ -44,7 +44,7 @@ class PostControllerTest extends TestCase
     public function testDontSeeEditBtn()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
                  ->assertDontSee("編集");
     }
@@ -53,7 +53,7 @@ class PostControllerTest extends TestCase
     {
         $post = $this->createValidPost();
         $response = $this->actingAs($post->user)
-                         ->get(route('post.create', ['screen_name' => $post->user->screen_name]));
+                         ->get(route('post.create', ['user' => $post->user]));
         $response->assertStatus(200)
                  ->assertViewIs('edit');
     }
@@ -61,7 +61,7 @@ class PostControllerTest extends TestCase
     public function testDontSeeCreatePage()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post.create', ['screen_name' => $post->user->screen_name]));
+        $response = $this->get(route('post.create', ['user' => $post->user]));
         $response->assertRedirect(route('login'));
     }
 
@@ -69,7 +69,7 @@ class PostControllerTest extends TestCase
     {
         $post = $this->createValidPost();
         $response = $this->actingAs($post->user)
-                         ->get(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+                         ->get(route('post.edit', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
                  ->assertViewIs('edit');
     }
@@ -77,7 +77,7 @@ class PostControllerTest extends TestCase
     public function testDontSeeEditPage()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        $response = $this->get(route('post.edit', ['user' => $post->user, 'post' => $post]));
         $response->assertRedirect(route('login'));
     }
 

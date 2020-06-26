@@ -15,74 +15,48 @@ use Carbon\Carbon;
 
 class PostController extends Controller
 {
-    public function create($screen_name)
+    public function __construct()
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
-        }
+        $this->middleware('owner')->except('show');
+    }
+
+    public function create(User $user)
+    {
         return view('edit', ['user' => $user]);
     }
 
-    public function store(UpdatePost $request, $screen_name)
+    public function store(UpdatePost $request, User $user)
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
-        }
-
         $request->validated();
 
-        $post = $user->posts()->create(['title' => '', 'body' => '']);
+        $post = $user->posts()->create(['title' => 'placeholder', 'body' => 'placeholder']);
         $post = $this->updatePost($request, $post);
-
-        return redirect(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        return redirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
     }
 
-    public function show($screen_name, $slug)
+    public function show(User $user, Post $post)
     {
-        $user = Auth::user();
-        $post = Post::where('slug', $slug)->firstOrFail();
-        return view('post', ['post' => $post, 'user' => $user]);
+        $is_owner = $user == Auth::user() ? true : false;
+        return view('post', ['post' => $post, 'is_owner' => $is_owner]);
     }
 
-    public function edit($screen_name, $slug)
+    public function edit(User $user, Post $post)
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect('login');
-        }
-        $post = Post::where('slug', $slug)->firstOrFail();
-        return view('edit', ['post' => $post, 'user' => $user]);
+        return view('edit', ['post' => $post]);
     }
 
-    public function update(UpdatePost $request, $screen_name, $slug)
+    public function update(UpdatePost $request, User $user, Post $post)
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
-        }
-
         $request->validated();
-
-        $post = Post::where('slug', $slug)->firstOrFail();
         $post = $this->updatePost($request, $post);
-
-        return redirect(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        return redirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
     }
 
-    public function destroy($screen_name, $slug)
+    public function destroy(User $user, Post $post)
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
-        }
-
-        $post = Post::where('slug', $slug)->firstOrFail();
         $this->deleteRelatedImages($post);
         $post->delete();
-
-        return redirect(route('user', ['screen_name' => $screen_name]));
+        return redirect(route('user', ['user' => $user]));
     }
 
     private function updatePost($request, $post) {

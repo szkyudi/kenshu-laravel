@@ -22,7 +22,7 @@ class UserControllerTest extends TestCase
 
         $post_others = factory(Post::class)->create();
 
-        $response = $this->get(route('user', ['screen_name' => $user->screen_name]));
+        $response = $this->get(route('user', ['user' => $user]));
 
         $response
             ->assertStatus(200)
@@ -37,7 +37,7 @@ class UserControllerTest extends TestCase
         $post = factory(Post::class)->states('close', 'future')->create();
 
         Auth::login($post->user);
-        $response = $this->get(route('user', ['screen_name' => $post->user->screen_name]));
+        $response = $this->get(route('user', ['user' => $post->user]));
 
         $response
             ->assertStatus(200)
@@ -49,7 +49,7 @@ class UserControllerTest extends TestCase
     {
         $post = factory(Post::class)->states('close', 'future')->create();
 
-        $response = $this->get(route('user', ['screen_name' => $post->user->screen_name]));
+        $response = $this->get(route('user', ['user' => $post->user]));
 
         $response
             ->assertStatus(200)

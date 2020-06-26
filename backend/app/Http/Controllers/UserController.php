@@ -9,20 +9,22 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function show($screen_name)
+    public function show(User $user)
     {
-        $auth_user = Auth::user();
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-
-        $posts = $user->posts();
-        if ($auth_user != $user) {
-            $posts = $posts->where([
-                ['is_open', true],
-                ['published_at', '<=', Carbon::now()],
-            ]);
+        if ($user == Auth::user()) {
+            $posts = $user->posts;
+            $is_owner = true;
+        } else {
+            $posts = $user->posts()->published()->get();
+            $is_owner = false;
         }
-        $posts = $posts->orderBy('published_at', 'desc')->get();
 
-        return view('user', ['user' => $user, 'posts' => $posts]);
+        $data = [
+            'user' => $user,
+            'posts' => $posts,
+            'is_owner' => $is_owner
+        ];
+
+        return view('user', $data);
     }
 }
