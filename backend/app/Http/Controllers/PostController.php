@@ -65,7 +65,7 @@ class PostController extends Controller
         foreach($post->images as $image) {
             $this->deleteImage($image);
         }
-        $this->deleteImage($this->thumbnail);
+        $this->deleteImage($post->thumbnail);
         $post->delete();
         return redirect(route('user', ['user' => $user]));
     }
