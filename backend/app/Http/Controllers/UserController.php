@@ -3,43 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function index()
+    public function show(User $user)
     {
-        //
-    }
+        if ($user == Auth::user()) {
+            $posts = $user->posts;
+            $is_owner = true;
+        } else {
+            $posts = $user->posts()->published()->get();
+            $is_owner = false;
+        }
 
-    public function create()
-    {
-        //
-    }
+        $data = [
+            'user' => $user,
+            'posts' => $posts,
+            'is_owner' => $is_owner
+        ];
 
-    public function store(Request $request)
-    {
-        //
-    }
-
-    public function show($screen_name)
-    {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        return view('user', ['user' => $user]);
-    }
-
-    public function edit(User $user)
-    {
-        //
-    }
-
-    public function update(Request $request, User $user)
-    {
-        //
-    }
-
-    public function destroy(User $user)
-    {
-        //
+        return view('user', $data);
     }
 }

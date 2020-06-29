@@ -5,28 +5,29 @@
 @endsection
 
 @section('content')
-    @auth
-    <a href="{{ route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug])}}">編集</a>
-    @endauth
+    @if($is_owner)
+        <a href="{{ route('post.edit', ['user' => $post->user, 'post' => $post])}}">編集</a>
+    @endif
     <h1>{{ $post->title }}</h1>
-    {{-- TODO: 本番ではコメントを外す --}}
-    {{-- <div><img src="{{ $post->thumbnail->thumbnailable->url }}" width="940"></div>
+    <span>{{ $post->user->screen_name }}</span>
+    @isset ($post->thumbnail)
+        <div><img src="{{ $post->thumbnail->getUrl() }}" width="940"></div>
+    @endisset
     @if ($post->images)
     <div>
         @foreach ($post->images as $image)
-        <img width="231" src="{{ $image->url }}">
+            <img width="231" src="{{ $image->url }}">
         @endforeach
     </div>
     @endif
-    <div>{{ $post->published_at }}</> --}}
+    <div>{{ $post->published_at }}</>
     @if ($post->tags)
     <div>
         @foreach ($post->tags as $tag)
-        <a href="{{ route('tag', $tag->name) }}">#{{ $tag->name }}</a>
+        <a href="{{ route('tag', $tag) }}">#{{ $tag->name }}</a>
         @endforeach
     </div>
     @endif
-
     <div>
         {{ $post->body }}
     </div>

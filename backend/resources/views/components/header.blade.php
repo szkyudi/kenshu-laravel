@@ -2,7 +2,7 @@
     <h1><a href="{{ route('index') }}">Kenshu Laravel</a></h1>
     <span>
         @auth
-        <a href="{{ route('user', ['screen_name' => Auth::user()->screen_name ]) }}">マイページ</a>
+        <a href="{{ route('user', ['user' => Auth::user() ]) }}">マイページ</a>
         <form action="{{ route('logout') }}" method="POST">@csrf <button>ログアウト</button></form>
         @endauth
         @guest

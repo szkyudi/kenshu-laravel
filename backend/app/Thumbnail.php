@@ -3,11 +3,20 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Thumbnail extends Model
 {
-    public function thumbnailable()
+    protected $fillable = [
+        'url',
+    ];
+
+    public function getUrl()
     {
-        return $this->morphTo();
+        if (strpos($this->url, 'placeholder.com')) {
+            return $this->url;
+        } else {
+            return Storage::url($this->url);
+        }
     }
 }

@@ -1,85 +1,142 @@
 <?php
 
-namespace App\Http\Controllers;]
+namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 use App\Post;
 use App\User;
-use Illuminate\Http\Request;
+use App\Image;
+use App\Tag;
+use App\Http\Requests\UpdatePost;
+
 use Carbon\Carbon;
 
 class PostController extends Controller
 {
-    public function create($screen_name)
+    public function __construct()
     {
-        $user = Auth::user();
-        if ($user->screen_name != $screen_name) {
-            return redirect('login');
+        $this->middleware('owner')->except('show');
+    }
+
+    public function create(User $user)
+    {
+        return view('edit', ['user' => $user]);
+    }
+
+    public function store(UpdatePost $request, User $user)
+    {
+        $request->validated();
+
+        $post = $user->posts()->create(['title' => 'タイトル未設定', 'body' => '本文未入力']);
+        $post = $this->updatePost($request, $post);
+        return redirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
+    }
+
+    public function show(User $user, Post $post)
+    {
+        if($post->is_close()) {
+            if (Auth::user() == $user) {
+                return redirect(route('post.edit', ['user' => $user, 'post' => $post]));
+            } else {
+                return abort(404);
+            }
         }
 
-        $post = new Post;
-        $post->user = User::where('screen_name', $screen_name)->firstOrFail();
-        return view('edit', ['post' => $post]);
-
+        $is_owner = $user == Auth::user() ? true : false;
+        return view('post', ['post' => $post, 'is_owner' => $is_owner]);
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function edit(User $user, Post $post)
     {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function show($screen_name, $slug)
-    {
-        $post = Post::where('slug', $slug)->firstOrFail();
-        return view('post', ['post' => $post]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($screen_nmae, $slug)
-    {
-        $post = Post::where('slug', $slug)->firstOrFail();
         return view('edit', ['post' => $post]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Post $post)
+    public function update(UpdatePost $request, User $user, Post $post)
     {
-        //
+        $request->validated();
+        $post = $this->updatePost($request, $post);
+        return redirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Post $post)
+    public function destroy(User $user, Post $post)
     {
-        //
+        foreach($post->images as $image) {
+            $this->deleteImage($image);
+        }
+        $this->deleteImage($this->thumbnail);
+        $post->delete();
+        return redirect(route('user', ['user' => $user]));
+    }
+
+    private function updatePost($request, $post) {
+        $post->update([
+            'title' => $request->input('title'),
+            'body' => $request->input('body'),
+        ]);
+        if($delete_images = $request->input('delete_images')) {
+            foreach($delete_images as $delete_image) {
+                $image = Image::find($delete_image);
+                $this->deleteImage($image);
+            }
+        }
+        if($request->hasFile('thumbnail')) {
+            $this->updateOrCreateThumbnail($request->file('thumbnail'), $post);
+        }
+        if($images = $request->file('images')) {
+            $this->createImages($images, $post);
+        }
+        if($tags = $request->input('tags')) {
+            $this->updateOrCreateTags($tags, $post);
+        }
+        return $post;
+    }
+
+    private function updateOrCreateThumbnail($thumbnail, $post)
+    {
+        if($thumbnail->isValid()) {
+            if ($post->thumbnail) {
+                Storage::delete($post->thumbnail->url);
+            }
+            $url = $this->uploadImage($thumbnail);
+            if($url) {
+                $post->thumbnail()->updateOrCreate(['post_id' => $post->id], ['url' => $url]);
+            }
+        }
+    }
+
+    private function uploadImage($image)
+    {
+        if (in_array($image->extension(), ['jpg', 'jpeg', 'png'])) {
+            return $image->store('public');
+        } else {
+            return null;
+        }
+    }
+
+    private function createImages($images, $post)
+    {
+        foreach($images as $image) {
+            if($image->isValid()) {
+                $url = $this->uploadImage($image);
+                if($url) {
+                    $post->images()->create(['url' => $url]);
+                }
+            }
+        }
+    }
+
+    private function updateOrCreateTags($tags, $post) {
+        $tag_id_array = [];
+        foreach (array_filter($tags, 'trim') as $tag_name) {
+            $tag_id_array[] = Tag::firstOrCreate(['name' => $tag_name])->id;
+        }
+        $post->tags()->sync($tag_id_array);
+    }
+
+    private function deleteImage($image) {
+        Storage::delete($image->url);
+        $image->delete();
     }
 }
