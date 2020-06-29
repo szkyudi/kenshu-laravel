@@ -10,79 +10,64 @@ use App\User;
 use App\Image;
 use App\Tag;
 use App\Http\Requests\UpdatePost;
-use Illuminate\Http\Request;
+
 use Carbon\Carbon;
 
 class PostController extends Controller
 {
-    public function create($screen_name)
+    public function __construct()
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
-        }
+        $this->middleware('owner')->except('show');
+    }
+
+    public function create(User $user)
+    {
         return view('edit', ['user' => $user]);
     }
 
-    public function store(UpdatePost $request, $screen_name)
+    public function store(UpdatePost $request, User $user)
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
-        }
-
         $request->validated();
 
-        $post = $user->posts()->create(['title' => '', 'body' => '']);
+        $post = $user->posts()->create(['title' => 'タイトル未設定', 'body' => '本文未入力']);
         $post = $this->updatePost($request, $post);
-
-        return redirect(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        return redirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
     }
 
-    public function show($screen_name, $slug)
+    public function show(User $user, Post $post)
     {
-        $user = Auth::user();
-        $post = Post::where('slug', $slug)->firstOrFail();
-        return view('post', ['post' => $post, 'user' => $user]);
-    }
-
-    public function edit($screen_name, $slug)
-    {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect('login');
-        }
-        $post = Post::where('slug', $slug)->firstOrFail();
-        return view('edit', ['post' => $post, 'user' => $user]);
-    }
-
-    public function update(UpdatePost $request, $screen_name, $slug)
-    {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
+        if($post->is_close()) {
+            if (Auth::user() == $user) {
+                return redirect(route('post.edit', ['user' => $user, 'post' => $post]));
+            } else {
+                return abort(404);
+            }
         }
 
+        $is_owner = $user == Auth::user() ? true : false;
+        return view('post', ['post' => $post, 'is_owner' => $is_owner]);
+    }
+
+    public function edit(User $user, Post $post)
+    {
+        return view('edit', ['post' => $post]);
+    }
+
+    public function update(UpdatePost $request, User $user, Post $post)
+    {
         $request->validated();
-
-        $post = Post::where('slug', $slug)->firstOrFail();
         $post = $this->updatePost($request, $post);
-
-        return redirect(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        return redirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
     }
 
-    public function destroy($screen_name, $slug)
+    public function destroy(User $user, Post $post)
     {
-        $user = User::where('screen_name', $screen_name)->firstOrFail();
-        if (Auth::user() != $user) {
-            return redirect(route('login'));
+        foreach($post->images as $image) {
+            $this->deleteImage($image);
         }
-
-        $post = Post::where('slug', $slug)->firstOrFail();
-        $this->deleteRelatedImages($post);
+        $this->deleteImage($this->thumbnail);
         $post->delete();
-
-        return redirect(route('user', ['screen_name' => $screen_name]));
+        return redirect(route('user', ['user' => $user]));
     }
 
     private function updatePost($request, $post) {
@@ -91,7 +76,10 @@ class PostController extends Controller
             'body' => $request->input('body'),
         ]);
         if($delete_images = $request->input('delete_images')) {
-            $this->deleteImages(Image::find($delete_images));
+            foreach($delete_images as $delete_image) {
+                $image = Image::find($delete_image);
+                $this->deleteImage($image);
+            }
         }
         if($request->hasFile('thumbnail')) {
             $this->updateOrCreateThumbnail($request->file('thumbnail'), $post);
@@ -112,7 +100,9 @@ class PostController extends Controller
                 Storage::delete($post->thumbnail->url);
             }
             $url = $this->uploadImage($thumbnail);
-            $post->thumbnail()->updateOrCreate(['post_id' => $post->id], ['url' => $url]);
+            if($url) {
+                $post->thumbnail()->updateOrCreate(['post_id' => $post->id], ['url' => $url]);
+            }
         }
     }
 
@@ -145,19 +135,8 @@ class PostController extends Controller
         $post->tags()->sync($tag_id_array);
     }
 
-    private function deleteImages($images) {
-        if ($images) {
-            foreach ($images as $image) {
-                Storage::delete($image->url);
-                $image->delete();
-            }
-        }
-    }
-
-    private function deleteRelatedImages($post) {
-        $this->deleteImages($post->images);
-        if ($post->thumbnail) {
-            Storage::delete($post->thumbnail->url);
-        }
+    private function deleteImage($image) {
+        Storage::delete($image->url);
+        $image->delete();
     }
 }

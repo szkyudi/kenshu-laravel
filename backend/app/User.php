@@ -22,6 +22,12 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function getRouteKeyName()
+    {
+        return 'screen_name';
+    }
+
+
     public function posts()
     {
         return $this->hasMany('App\Post');

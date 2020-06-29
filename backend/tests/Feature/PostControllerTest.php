@@ -17,8 +17,9 @@ class PostControllerTest extends TestCase
     public function testSeeShowPage()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
+                 ->assertViewIs('post')
                  ->assertSee($post->title)
                  ->assertSee($post->body)
                  ->assertSee($post->thumbnail->getUrl());
@@ -32,20 +33,36 @@ class PostControllerTest extends TestCase
         }
     }
 
+    public function testDontSeeShowPageIsPrivate()
+    {
+        $post = factory(Post::class)->states('future', 'close')->create();
+        $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
+        $response->assertStatus(404);
+    }
+
+    public function testSeeShowPageIsPrivateAndOwn()
+    {
+        $post = factory(Post::class)->states('future', 'close')->create();
+        $response = $this->actingAs($post->user)->get(route('post', ['user' => $post->user, 'post' => $post]));
+        $response->assertRedirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
+    }
+
     public function testSeeEditBtnFromOwner()
     {
         $post = $this->createValidPost();
         $response = $this->actingAs($post->user)
-                         ->get(route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+                         ->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
+                 ->assertViewIs('post')
                  ->assertSee("編集");
     }
 
     public function testDontSeeEditBtn()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
+                 ->assertViewIs('post')
                  ->assertDontSee("編集");
     }
 
@@ -53,7 +70,7 @@ class PostControllerTest extends TestCase
     {
         $post = $this->createValidPost();
         $response = $this->actingAs($post->user)
-                         ->get(route('post.create', ['screen_name' => $post->user->screen_name]));
+                         ->get(route('post.create', ['user' => $post->user]));
         $response->assertStatus(200)
                  ->assertViewIs('edit');
     }
@@ -61,7 +78,7 @@ class PostControllerTest extends TestCase
     public function testDontSeeCreatePage()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post.create', ['screen_name' => $post->user->screen_name]));
+        $response = $this->get(route('post.create', ['user' => $post->user]));
         $response->assertRedirect(route('login'));
     }
 
@@ -69,7 +86,7 @@ class PostControllerTest extends TestCase
     {
         $post = $this->createValidPost();
         $response = $this->actingAs($post->user)
-                         ->get(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+                         ->get(route('post.edit', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
                  ->assertViewIs('edit');
     }
@@ -77,13 +94,13 @@ class PostControllerTest extends TestCase
     public function testDontSeeEditPage()
     {
         $post = $this->createValidPost();
-        $response = $this->get(route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]));
+        $response = $this->get(route('post.edit', ['user' => $post->user, 'post' => $post]));
         $response->assertRedirect(route('login'));
     }
 
     private function createValidPost()
     {
-        $post = factory(Post::class)->create(['title' => 'Test title', 'body' => 'Test body']);
+        $post = factory(Post::class)->states('open', 'past')->create(['title' => 'Test title', 'body' => 'Test body']);
         $post->thumbnail()->save(factory(Thumbnail::class)->make());
         $post->tags()->saveMany(factory(Tag::class, 3)->make());
         $post->images()->saveMany(factory(Image::class, 3)->make());

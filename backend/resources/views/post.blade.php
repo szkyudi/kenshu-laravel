@@ -5,11 +5,9 @@
 @endsection
 
 @section('content')
-    @isset($user)
-        @if($post->user == $user)
-            <a href="{{ route('post.edit', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug])}}">編集</a>
-        @endif
-    @endisset
+    @if($is_owner)
+        <a href="{{ route('post.edit', ['user' => $post->user, 'post' => $post])}}">編集</a>
+    @endif
     <h1>{{ $post->title }}</h1>
     <span>{{ $post->user->screen_name }}</span>
     @isset ($post->thumbnail)
@@ -26,7 +24,7 @@
     @if ($post->tags)
     <div>
         @foreach ($post->tags as $tag)
-        <a href="{{ route('tag', $tag->name) }}">#{{ $tag->name }}</a>
+        <a href="{{ route('tag', $tag) }}">#{{ $tag->name }}</a>
         @endforeach
     </div>
     @endif

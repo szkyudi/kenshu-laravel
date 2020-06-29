@@ -20,6 +20,7 @@ class IndexControllerTest extends TestCase
         $response = $this->get(route('index'));
         $response
             ->assertStatus(200)
+            ->assertViewIs('index')
             ->assertSee($post->title)
             ->assertSee($post->thumbnail->getUrl());
     }
@@ -30,6 +31,7 @@ class IndexControllerTest extends TestCase
         $response = $this->get(route('index'));
         $response
             ->assertStatus(200)
+            ->assertViewIs('index')
             ->assertDontSee($post->title);
     }
 
@@ -39,6 +41,7 @@ class IndexControllerTest extends TestCase
         $response = $this->get(route('index'));
         $response
             ->assertStatus(200)
+            ->assertViewIs('index')
             ->assertDontSee($post->title);
     }
 
@@ -47,6 +50,7 @@ class IndexControllerTest extends TestCase
         $response = $this->get(route('index'));
         $response
             ->assertStatus(200)
+            ->assertViewIs('index')
             ->assertSee('記事が見つかりませんでした');
     }
 }

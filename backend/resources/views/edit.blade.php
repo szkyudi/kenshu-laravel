@@ -9,12 +9,12 @@
 
 @section('content')
     @isset($post)
-        <a href="{{ route('post', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]) }}">ページ</a>
+        <a href="{{ route('post', ['user' => $post->user, 'post' => $post]) }}">ページ</a>
     @endisset
     @if (isset($post))
-        <form action="{{ route('post.update', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('post.update', ['user' => $post->user, 'post' => $post]) }}" method="POST" enctype="multipart/form-data">
     @else
-        <form action="{{ route('post.store', ['screen_name' => $user->screen_name]) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('post.store', ['user' => $user]) }}" method="POST" enctype="multipart/form-data">
     @endif
         @csrf
         <div>タイトル</div>
@@ -77,7 +77,7 @@
         <button>保存</button>
     </form>
     @isset($post)
-        <form action="{{ route('post.destroy', ['screen_name' => $post->user->screen_name, 'slug' => $post->slug]) }}" method="POST">
+        <form action="{{ route('post.destroy', ['user' => $post->user, 'post' => $post]) }}" method="POST">
             @csrf
             <button>削除</button>
         </form>
