@@ -19,6 +19,7 @@ class PostControllerTest extends TestCase
         $post = $this->createValidPost();
         $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
+                 ->assertViewIs('post')
                  ->assertSee($post->title)
                  ->assertSee($post->body)
                  ->assertSee($post->thumbnail->getUrl());
@@ -32,12 +33,27 @@ class PostControllerTest extends TestCase
         }
     }
 
+    public function testDontSeeShowPageIsPrivate()
+    {
+        $post = factory(Post::class)->states('future', 'close')->create();
+        $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
+        $response->assertStatus(404);
+    }
+
+    public function testSeeShowPageIsPrivateAndOwn()
+    {
+        $post = factory(Post::class)->states('future', 'close')->create();
+        $response = $this->actingAs($post->user)->get(route('post', ['user' => $post->user, 'post' => $post]));
+        $response->assertRedirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
+    }
+
     public function testSeeEditBtnFromOwner()
     {
         $post = $this->createValidPost();
         $response = $this->actingAs($post->user)
                          ->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
+                 ->assertViewIs('post')
                  ->assertSee("編集");
     }
 
@@ -46,6 +62,7 @@ class PostControllerTest extends TestCase
         $post = $this->createValidPost();
         $response = $this->get(route('post', ['user' => $post->user, 'post' => $post]));
         $response->assertStatus(200)
+                 ->assertViewIs('post')
                  ->assertDontSee("編集");
     }
 
@@ -83,7 +100,7 @@ class PostControllerTest extends TestCase
 
     private function createValidPost()
     {
-        $post = factory(Post::class)->create(['title' => 'Test title', 'body' => 'Test body']);
+        $post = factory(Post::class)->states('open', 'past')->create(['title' => 'Test title', 'body' => 'Test body']);
         $post->thumbnail()->save(factory(Thumbnail::class)->make());
         $post->tags()->saveMany(factory(Tag::class, 3)->make());
         $post->images()->saveMany(factory(Image::class, 3)->make());

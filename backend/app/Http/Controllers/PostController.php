@@ -11,6 +11,8 @@ use App\Image;
 use App\Tag;
 use App\Http\Requests\UpdatePost;
 
+use Carbon\Carbon;
+
 class PostController extends Controller
 {
     public function __construct()
@@ -27,13 +29,21 @@ class PostController extends Controller
     {
         $request->validated();
 
-        $post = $user->posts()->create(['title' => 'placeholder', 'body' => 'placeholder']);
+        $post = $user->posts()->create(['title' => 'タイトル未設定', 'body' => '本文未入力']);
         $post = $this->updatePost($request, $post);
         return redirect(route('post.edit', ['user' => $post->user, 'post' => $post]));
     }
 
     public function show(User $user, Post $post)
     {
+        if($post->is_close()) {
+            if (Auth::user() == $user) {
+                return redirect(route('post.edit', ['user' => $user, 'post' => $post]));
+            } else {
+                return abort(404);
+            }
+        }
+
         $is_owner = $user == Auth::user() ? true : false;
         return view('post', ['post' => $post, 'is_owner' => $is_owner]);
     }

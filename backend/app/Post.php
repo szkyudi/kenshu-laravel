@@ -50,6 +50,10 @@ class Post extends Model
         return $this->hasOne('App\Thumbnail');
     }
 
+    public function is_close() {
+        return !$this->is_open || $this->published_at > Carbon::now();
+    }
+
     public function scopePublished($query)
     {
         return $query->where([

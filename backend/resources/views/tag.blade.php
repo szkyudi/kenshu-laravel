@@ -6,5 +6,5 @@
 
 @section('content')
     <h1>"{{ $tag->name }}"のタグがついた投稿</h1>
-    @include('collections.posts.list', ['posts' => $tag->posts])
+    @include('collections.posts.list', ['posts' => $posts])
 @endsection

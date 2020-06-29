@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 use App\User;
@@ -19,7 +17,6 @@ class UserControllerTest extends TestCase
         $user = factory(User::class)->create(['screen_name' => 'test']);
         $post_own = factory(Post::class)->states('open')->create(['user_id' => $user->id]);
         $post_private = factory(Post::class)->states('close', 'future')->create(['user_id' => $user->id]);
-
         $post_others = factory(Post::class)->create();
 
         $response = $this->get(route('user', ['user' => $user]));
@@ -32,28 +29,15 @@ class UserControllerTest extends TestCase
             ->assertDontSee($post_others->title);
     }
 
-    public function testSeePostIsUnpublishedFromAuthUser()
+    public function testSeeOwnPosts()
     {
         $post = factory(Post::class)->states('close', 'future')->create();
 
-        Auth::login($post->user);
-        $response = $this->get(route('user', ['user' => $post->user]));
+        $response = $this->actingAs($post->user)->get(route('user', ['user' => $post->user]));
 
         $response
             ->assertStatus(200)
             ->assertViewIs('user')
             ->assertSee($post->title);
-    }
-
-    public function testDontSeePostIsPrivate()
-    {
-        $post = factory(Post::class)->states('close', 'future')->create();
-
-        $response = $this->get(route('user', ['user' => $post->user]));
-
-        $response
-            ->assertStatus(200)
-            ->assertViewIs('user')
-            ->assertDontSee($post->title);
     }
 }
