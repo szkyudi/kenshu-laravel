@@ -32,8 +32,6 @@ Route::get('tag/{tag}', 'TagController@show')->name('tag');
 
 // User
 Route::get('@{user}', 'UserController@show')->name('user');
-Route::get('@{user}/edit', 'UserController@show')->name('user.edit');
-Route::post('@{user}/edit', 'UserController@edit')->name('user.update');
 
 // Post
 Route::get('@{user}/create', 'PostController@create')->name('post.create');

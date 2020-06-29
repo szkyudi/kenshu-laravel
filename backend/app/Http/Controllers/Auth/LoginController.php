@@ -45,6 +45,6 @@ class LoginController extends Controller
         if (!$user) {
             return '/';
         }
-        return route('user', ['screen_name' => $user->screen_name]);
+        return route('user', ['user' => $user]);
     }
 }

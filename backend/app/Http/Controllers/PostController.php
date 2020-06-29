@@ -10,8 +10,6 @@ use App\User;
 use App\Image;
 use App\Tag;
 use App\Http\Requests\UpdatePost;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class PostController extends Controller
 {
@@ -54,7 +52,10 @@ class PostController extends Controller
 
     public function destroy(User $user, Post $post)
     {
-        $this->deleteRelatedImages($post);
+        foreach($post->images as $image) {
+            $this->deleteImage($image);
+        }
+        $this->deleteImage($this->thumbnail);
         $post->delete();
         return redirect(route('user', ['user' => $user]));
     }
@@ -65,7 +66,10 @@ class PostController extends Controller
             'body' => $request->input('body'),
         ]);
         if($delete_images = $request->input('delete_images')) {
-            $this->deleteImages(Image::find($delete_images));
+            foreach($delete_images as $delete_image) {
+                $image = Image::find($delete_image);
+                $this->deleteImage($image);
+            }
         }
         if($request->hasFile('thumbnail')) {
             $this->updateOrCreateThumbnail($request->file('thumbnail'), $post);
@@ -86,7 +90,9 @@ class PostController extends Controller
                 Storage::delete($post->thumbnail->url);
             }
             $url = $this->uploadImage($thumbnail);
-            $post->thumbnail()->updateOrCreate(['post_id' => $post->id], ['url' => $url]);
+            if($url) {
+                $post->thumbnail()->updateOrCreate(['post_id' => $post->id], ['url' => $url]);
+            }
         }
     }
 
@@ -119,19 +125,8 @@ class PostController extends Controller
         $post->tags()->sync($tag_id_array);
     }
 
-    private function deleteImages($images) {
-        if ($images) {
-            foreach ($images as $image) {
-                Storage::delete($image->url);
-                $image->delete();
-            }
-        }
-    }
-
-    private function deleteRelatedImages($post) {
-        $this->deleteImages($post->images);
-        if ($post->thumbnail) {
-            Storage::delete($post->thumbnail->url);
-        }
+    private function deleteImage($image) {
+        Storage::delete($image->url);
+        $image->delete();
     }
 }
